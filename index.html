@@ -1,0 +1,2555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oracle DBA Troubleshooting | Junior DBA Field Course</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;600;700&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0d14;
+  --bg2: #0f1320;
+  --bg3: #141828;
+  --surface: #1a2035;
+  --surface2: #212840;
+  --border: #2a3455;
+  --accent: #4f9eff;
+  --accent2: #ff6b35;
+  --accent3: #00d4aa;
+  --accent4: #ffc940;
+  --red: #ff4757;
+  --text: #e8edf5;
+  --text2: #8fa3c8;
+  --text3: #5a7099;
+  --code-bg: #0d1117;
+  --success: #00d4aa;
+  --warning: #ffc940;
+  --danger: #ff4757;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+/* NOISE TEXTURE */
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:9999;
+  opacity:0.4;
+}
+
+/* ===== SIDEBAR ===== */
+#sidebar {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 270px;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+#sidebar::-webkit-scrollbar { width: 4px; }
+#sidebar::-webkit-scrollbar-track { background: transparent; }
+#sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.sidebar-logo {
+  padding: 24px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-logo .logo-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.sidebar-logo h2 {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.sidebar-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 2px 10px;
+  background: rgba(79,158,255,0.12);
+  border: 1px solid rgba(79,158,255,0.3);
+  border-radius: 20px;
+  font-size: 11px;
+  color: var(--accent);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.nav-section-title {
+  padding: 16px 20px 6px;
+  font-size: 10px;
+  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--text3);
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 20px;
+  color: var(--text2);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+
+.nav-item:hover {
+  background: var(--surface);
+  color: var(--text);
+  border-left-color: var(--accent);
+}
+
+.nav-item.active {
+  background: rgba(79,158,255,0.08);
+  color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+.nav-item .nav-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  min-width: 18px;
+}
+
+/* ===== MAIN ===== */
+#main {
+  margin-left: 270px;
+  min-height: 100vh;
+}
+
+/* ===== HERO ===== */
+.hero {
+  background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 50%, #0f1a2e 100%);
+  padding: 40px 44px 40px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.hero::before {
+  display: none;
+}
+
+.hero-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hero-eyebrow::before {
+  content: '';
+  display: block;
+  width: 30px;
+  height: 1px;
+  background: var(--accent);
+}
+
+.hero h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(22px, 3.2vw, 36px);
+  font-weight: 800;
+  line-height: 1.2;
+  margin-bottom: 16px;
+  max-width: 640px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.hero h1 span {
+  color: var(--accent);
+}
+
+.hero-desc {
+  color: var(--text2);
+  font-size: 16px;
+  max-width: 600px;
+  margin-bottom: 30px;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===== CONTENT AREA ===== */
+.content {
+  padding: 50px 60px;
+  max-width: 1000px;
+}
+
+/* ===== SECTION ===== */
+.section {
+  margin-bottom: 70px;
+  scroll-margin-top: 20px;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 30px;
+}
+
+.section-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(79,158,255,0.1);
+  border: 1px solid rgba(79,158,255,0.25);
+  padding: 4px 10px;
+  border-radius: 4px;
+  letter-spacing: 1px;
+}
+
+.section-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+  margin-bottom: 30px;
+}
+
+/* ===== CARDS ===== */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-title .icon {
+  font-size: 18px;
+}
+
+/* ===== ALERT BOXES ===== */
+.alert {
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  font-size: 14px;
+}
+
+.alert-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+
+.alert.warning {
+  background: rgba(255,201,64,0.08);
+  border: 1px solid rgba(255,201,64,0.25);
+  color: var(--text2);
+}
+
+.alert.danger {
+  background: rgba(255,71,87,0.08);
+  border: 1px solid rgba(255,71,87,0.25);
+  color: var(--text2);
+}
+
+.alert.success {
+  background: rgba(0,212,170,0.08);
+  border: 1px solid rgba(0,212,170,0.25);
+  color: var(--text2);
+}
+
+.alert.info {
+  background: rgba(79,158,255,0.08);
+  border: 1px solid rgba(79,158,255,0.25);
+  color: var(--text2);
+}
+
+/* ===== CODE BLOCKS ===== */
+.code-block {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 14px 0;
+  overflow: hidden;
+}
+
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--border);
+}
+
+.code-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.code-dots { display: flex; gap: 5px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #28c941; }
+
+pre {
+  padding: 18px 20px;
+  overflow-x: auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: #c9d1d9;
+}
+
+pre::-webkit-scrollbar { height: 4px; }
+pre::-webkit-scrollbar-track { background: transparent; }
+pre::-webkit-scrollbar-thumb { background: var(--border); }
+
+code { font-family: 'JetBrains Mono', monospace; }
+
+.inline-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: rgba(79,158,255,0.1);
+  border: 1px solid rgba(79,158,255,0.2);
+  padding: 1px 7px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* Syntax colors */
+.kw { color: #ff7b72; }
+.str { color: #a5d6ff; }
+.cm { color: #5a7099; font-style: italic; }
+.num { color: #79c0ff; }
+.fn { color: #d2a8ff; }
+.var { color: #ffa657; }
+.op { color: var(--text2); }
+
+/* ===== STEP LIST ===== */
+.steps {
+  counter-reset: step-counter;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.steps li {
+  counter-increment: step-counter;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.steps li:hover { border-color: rgba(79,158,255,0.3); }
+
+.steps li::before {
+  content: counter(step-counter, decimal-leading-zero);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  background: rgba(79,158,255,0.1);
+  border: 1px solid rgba(79,158,255,0.2);
+  min-width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.step-content {}
+.step-title {
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.step-desc { color: var(--text2); font-size: 14px; }
+
+/* ===== CHECK LIST ===== */
+.checklist {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text2);
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(42,52,85,0.5);
+}
+
+.checklist li:last-child { border-bottom: none; }
+
+.check-box {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+
+.check-box:hover { border-color: var(--accent3); }
+.check-box.checked { background: var(--accent3); border-color: var(--accent3); color: #000; }
+
+/* ===== GRID ===== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ===== TAGS / BADGES ===== */
+.badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.badge-danger { background: rgba(255,71,87,0.15); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+.badge-success { background: rgba(0,212,170,0.1); color: var(--accent3); border: 1px solid rgba(0,212,170,0.25); }
+.badge-warning { background: rgba(255,201,64,0.1); color: var(--accent4); border: 1px solid rgba(255,201,64,0.25); }
+.badge-info { background: rgba(79,158,255,0.1); color: var(--accent); border: 1px solid rgba(79,158,255,0.25); }
+
+/* ===== TABLE ===== */
+.table-wrap { overflow-x: auto; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+thead th {
+  background: var(--surface2);
+  padding: 12px 16px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(42,52,85,0.5);
+  color: var(--text2);
+  vertical-align: top;
+}
+tbody tr:hover td { background: rgba(255,255,255,0.02); }
+
+/* ===== QUESTION CARDS ===== */
+.question-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 16px;
+}
+
+.q-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.q-text {
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 14px;
+  font-size: 15px;
+}
+
+.q-options { display: flex; flex-direction: column; gap: 8px; }
+
+.q-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13.5px;
+  color: var(--text2);
+}
+
+.q-option:hover { border-color: var(--accent); color: var(--text); background: rgba(79,158,255,0.05); }
+.q-option.correct { border-color: var(--accent3); background: rgba(0,212,170,0.08); color: var(--text); }
+.q-option.wrong { border-color: var(--red); background: rgba(255,71,87,0.08); }
+
+.option-letter {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  min-width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.q-answer {
+  display: none;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: rgba(0,212,170,0.05);
+  border: 1px solid rgba(0,212,170,0.2);
+  border-radius: 6px;
+  font-size: 13.5px;
+  color: var(--text2);
+}
+
+.q-answer.show { display: block; }
+
+.btn-reveal {
+  margin-top: 12px;
+  padding: 7px 16px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text3);
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-reveal:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ===== LAB CARD ===== */
+.lab-card {
+  background: linear-gradient(135deg, var(--surface) 0%, rgba(79,158,255,0.03) 100%);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.lab-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.lab-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.lab-meta {
+  display: flex;
+  gap: 8px;
+}
+
+.lab-difficulty {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.difficulty-beginner { background: rgba(0,212,170,0.1); color: var(--accent3); border: 1px solid rgba(0,212,170,0.2); }
+.difficulty-intermediate { background: rgba(255,201,64,0.1); color: var(--accent4); border: 1px solid rgba(255,201,64,0.2); }
+.difficulty-advanced { background: rgba(255,71,87,0.1); color: var(--red); border: 1px solid rgba(255,71,87,0.2); }
+
+.lab-objective {
+  background: rgba(0,0,0,0.2);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: 0 6px 6px 0;
+  font-size: 14px;
+  color: var(--text2);
+}
+
+/* ===== RUNBOOK ===== */
+.runbook {
+  border: 1px solid rgba(255,201,64,0.3);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+
+.runbook-header {
+  background: rgba(255,201,64,0.08);
+  border-bottom: 1px solid rgba(255,201,64,0.2);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.runbook-icon { font-size: 20px; }
+.runbook-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+.runbook-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+.runbook-body { padding: 20px; }
+
+/* ===== TIMELINE / STARTUP SEQUENCE ===== */
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--accent), var(--accent3), transparent);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.timeline-stage {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 4px;
+}
+
+.timeline-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.timeline-desc { color: var(--text2); font-size: 13.5px; }
+
+/* ===== SCENARIO ===== */
+.scenario-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent2);
+  border-radius: 0 10px 10px 0;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.scenario-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--accent2);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.scenario-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+/* ===== SOP ===== */
+.sop {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent3);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.sop-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.sop-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+  color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ===== PROGRESS / HEADER ===== */
+.module-banner {
+  background: linear-gradient(135deg, var(--surface) 0%, var(--bg3) 100%);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.module-banner-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+}
+
+/* ===== ASSESSMENT ===== */
+.score-display {
+  text-align: center;
+  padding: 30px;
+  display: none;
+}
+
+.score-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid var(--accent3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 14px;
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent3);
+}
+
+/* ===== NAVIGATION ARROWS ===== */
+.page-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 30px 0 40px;
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+}
+
+.btn-nav {
+  padding: 10px 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-nav:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ===== NOTICE BOXES ===== */
+.notice {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin: 12px 0;
+  font-size: 14px;
+  color: var(--text2);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+/* P STYLING */
+p { color: var(--text2); margin-bottom: 12px; line-height: 1.75; }
+h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; color: var(--text); margin: 24px 0 12px; }
+h4 { font-size: 15px; font-weight: 600; color: var(--text); margin: 18px 0 8px; }
+
+strong { color: var(--text); }
+em { color: var(--accent4); font-style: normal; }
+
+ul.bullet-list { padding-left: 20px; color: var(--text2); font-size: 14px; }
+ul.bullet-list li { margin-bottom: 6px; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+  #sidebar { display: none; }
+  #main { margin-left: 0; }
+  .hero { padding: 32px 24px; }
+  .content { padding: 24px 20px; }
+  .hero h1 { font-size: clamp(22px, 6vw, 34px); }
+  .grid-2, .grid-3, .two-col { grid-template-columns: 1fr; }
+}
+
+/* PRINT STYLES */
+@media print {
+  #sidebar { display: none; }
+  #main { margin-left: 0; }
+}
+
+/* ANIMATIONS */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section { animation: fadeInUp 0.4s ease both; }
+
+/* Highlight bar */
+.highlight-bar {
+  background: linear-gradient(90deg, rgba(79,158,255,0.1), rgba(0,212,170,0.05));
+  border: 1px solid rgba(79,158,255,0.15);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.highlight-bar strong { color: var(--accent); }
+
+/* Decision tree */
+.decision-tree {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text2);
+  line-height: 2;
+}
+
+.tree-node { display: flex; align-items: flex-start; gap: 6px; }
+.tree-yes { color: var(--accent3); }
+.tree-no { color: var(--red); }
+.tree-action { color: var(--accent4); }
+.tree-leaf { color: var(--accent); }
+
+/* Status indicator */
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+.status-dot.green { background: var(--accent3); box-shadow: 0 0 6px var(--accent3); }
+.status-dot.red { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.status-dot.yellow { background: var(--accent4); box-shadow: 0 0 6px var(--accent4); }
+</style>
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<nav id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-tag">// Field Course</div>
+    <h2>Oracle DBA<br>Troubleshooting</h2>
+    <span class="sidebar-badge">Junior DBA · v1.0</span>
+  </div>
+
+  <div class="nav-section-title">Foundations</div>
+  <a class="nav-item" href="#module0"><span class="nav-num">00</span> Course Overview</a>
+  <a class="nav-item" href="#module1"><span class="nav-num">01</span> Finding Errors & Alert Logs</a>
+  <a class="nav-item" href="#module2"><span class="nav-num">02</span> Startup & Shutdown Sequence</a>
+
+  <div class="nav-section-title">Core Issues</div>
+  <a class="nav-item" href="#module3"><span class="nav-num">03</span> Instance Termination</a>
+  <a class="nav-item" href="#module4"><span class="nav-num">04</span> Archive Log Filling Up</a>
+  <a class="nav-item" href="#module5"><span class="nav-num">05</span> Missing Control Files</a>
+  <a class="nav-item" href="#module6"><span class="nav-num">06</span> RMAN Backup Failures</a>
+
+  <div class="nav-section-title">Practice</div>
+  <a class="nav-item" href="#labs"><span class="nav-num">07</span> Hands-On Labs</a>
+  <a class="nav-item" href="#scenarios"><span class="nav-num">08</span> Scenario Simulations</a>
+  <a class="nav-item" href="#runbooks"><span class="nav-num">09</span> Runbooks & SOPs</a>
+  <a class="nav-item" href="#assessment"><span class="nav-num">10</span> Assessment</a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main id="main">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-eyebrow">On-the-Job Support Program</div>
+    <h1>Oracle DBA <span>Troubleshooting</span><br>Field Course</h1>
+    <p class="hero-desc">A complete training guide built from real incidents. You'll learn how to diagnose, resolve, and prevent the most common Oracle database problems a junior DBA faces — with runbooks, labs, and assessment to prove your skills.</p>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">10</span><span class="stat-label">Modules</span></div>
+      <div class="stat"><span class="stat-num">6</span><span class="stat-label">Hands-On Labs</span></div>
+      <div class="stat"><span class="stat-num">5</span><span class="stat-label">Runbooks</span></div>
+      <div class="stat"><span class="stat-num">30+</span><span class="stat-label">Practice Questions</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+  <!-- ===== MODULE 0: OVERVIEW ===== -->
+  <div class="section" id="module0">
+    <div class="module-banner">
+      <div>
+        <div class="section-num" style="margin-bottom:8px">MODULE 00</div>
+        <div class="module-banner-title">Course Overview</div>
+      </div>
+      <span class="badge badge-info">Start Here</span>
+    </div>
+
+    <p>This course is built from a <strong>real incident</strong> that a junior DBA encountered on the job. Instead of textbook theory, everything here comes from actual problems, real commands, and the kind of thinking senior DBAs use under pressure.</p>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div><strong>How to use this course:</strong> Work through each module in order the first time. Then use the runbooks and SOPs as quick reference cards during real incidents. Complete the assessment at the end to test yourself.</div>
+    </div>
+
+    <h3>What Really Happened (The Real Incident)</h3>
+    <p>A junior DBA was on call and encountered two separate crises on the same day:</p>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">🔴</span> Issue 1: Archive Logs Filling FRA</div>
+        <p style="font-size:13.5px">The Fast Recovery Area (FRA) filled up to 50GB and crashed the database. Investigation revealed that the RMAN backup job had silently been failing since March 3rd because the database VM shuts down at 5 PM — but the backup job was scheduled to run at 00:20 (midnight). No backup = no deletion = disk fills.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🔴</span> Issue 2: Missing Control Files (VM Clone)</div>
+        <p style="font-size:13.5px">A cloned VM had its database pointed to control files that still lived on the source VM. Oracle couldn't start — it looked for files that didn't exist on the new server. This required locating the control files, copying them over safely, and validating startup.</p>
+      </div>
+    </div>
+
+    <h3>Skills You'll Build</h3>
+    <div class="grid-3">
+      <div class="card"><strong style="color:var(--accent3)">🔍 Diagnose</strong><p style="font-size:13px;margin-top:8px">Read alert logs, interpret ORA errors, and find root causes fast</p></div>
+      <div class="card"><strong style="color:var(--accent4)">🔧 Fix</strong><p style="font-size:13px;margin-top:8px">Use RMAN, SQL*Plus, and OS tools to resolve common incidents</p></div>
+      <div class="card"><strong style="color:var(--accent)">📋 Communicate</strong><p style="font-size:13px;margin-top:8px">Write incident summaries and manager updates like a senior DBA</p></div>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 1: ALERT LOGS ===== -->
+  <div class="section" id="module1">
+    <div class="section-header">
+      <span class="section-num">MODULE 01</span>
+      <h2 class="section-title">Finding Errors & Alert Logs</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>When something goes wrong with Oracle, your first job is to <strong>find the evidence</strong>. The alert log is the most important file you'll ever read as a DBA. It records every database startup, shutdown, error, and significant event in chronological order.</p>
+
+    <h3>📍 Where to Find the Alert Log</h3>
+
+    <div class="alert warning">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Rule #1:</strong> Always check the alert log FIRST before assuming anything. It will tell you what actually happened.</div>
+    </div>
+
+    <h4>Method 1: Using ADR (Recommended — Oracle 11g+)</h4>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">SQL*Plus</span></div>
+      <pre><span class="cm">-- From SQL*Plus, find the alert log location</span>
+<span class="kw">SELECT</span> value <span class="kw">FROM</span> v$diag_info <span class="kw">WHERE</span> name = <span class="str">'Diag Trace'</span>;
+
+<span class="cm">-- Or check your ADR base</span>
+<span class="kw">SHOW</span> PARAMETER diagnostic_dest;</pre>
+    </div>
+
+    <h4>Method 2: Standard Path Pattern</h4>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Linux / OS Shell</span></div>
+      <pre><span class="cm"># Oracle 11g and above (ADR structure)</span>
+$ORACLE_BASE/diag/rdbms/&lt;db_name&gt;/&lt;SID&gt;/trace/alert_&lt;SID&gt;.log
+
+<span class="cm"># Example (replace ORCL with your SID)</span>
+/u01/app/oracle/diag/rdbms/orcl/ORCL/trace/alert_ORCL.log
+
+<span class="cm"># If you don't know ORACLE_BASE, check environment</span>
+echo $ORACLE_BASE
+echo $ORACLE_SID</pre>
+    </div>
+
+    <h4>Method 3: Find It If You Don't Know the Path</h4>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Linux Shell</span></div>
+      <pre><span class="cm"># Search the filesystem for the alert log</span>
+find / -name "alert_*.log" 2>/dev/null
+
+<span class="cm"># Or search common Oracle paths</span>
+find /u01 /u02 /opt/oracle -name "alert_*.log" 2>/dev/null</pre>
+    </div>
+
+    <h3>📖 How to Read the Alert Log</h3>
+    <p>The alert log can be thousands of lines long. Here's how to work with it efficiently:</p>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Reading the Alert Log — Key Commands</span></div>
+      <pre><span class="cm"># View the LAST 100 lines (most recent events)</span>
+tail -100 alert_ORCL.log
+
+<span class="cm"># Watch it live (like watching TV — see new events as they happen)</span>
+tail -f alert_ORCL.log
+
+<span class="cm"># Search for ALL Oracle errors</span>
+grep -i "ORA-" alert_ORCL.log
+
+<span class="cm"># Search for a specific error</span>
+grep "ORA-00257" alert_ORCL.log
+
+<span class="cm"># Show errors with surrounding context (5 lines before and after)</span>
+grep -B5 -A5 "ORA-00257" alert_ORCL.log
+
+<span class="cm"># Search for recent errors (filter by date)</span>
+grep -A5 "2024-03-04" alert_ORCL.log | grep -i "ORA-"
+
+<span class="cm"># Count how many times an error appears</span>
+grep -c "ORA-00257" alert_ORCL.log</pre>
+    </div>
+
+    <h3>🔑 Understanding What You're Reading</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>What You See</th><th>What It Means</th><th>What To Do</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code class="inline-code">ORA-00257</code></td><td>Archiver error — archive log destination is full or inaccessible</td><td>Check FRA space, backup archive logs</td></tr>
+          <tr><td><code class="inline-code">ORA-01034</code></td><td>ORACLE not available — instance is down or failed to start</td><td>Check what error came just BEFORE this</td></tr>
+          <tr><td><code class="inline-code">ORA-00210</code></td><td>Cannot open the specified control file</td><td>Check if control files exist at listed paths</td></tr>
+          <tr><td><code class="inline-code">ORA-00202</code></td><td>Control file path specified in parameter file</td><td>Shows you exactly which file Oracle is looking for</td></tr>
+          <tr><td><code class="inline-code">ORA-01078</code></td><td>Failure in processing system parameters</td><td>Check spfile/pfile for syntax or missing parameters</td></tr>
+          <tr><td><code class="inline-code">LRM-00109</code></td><td>Could not open parameter file</td><td>Locate and verify pfile/spfile exists</td></tr>
+          <tr><td><code class="inline-code">Termination of instance</code></td><td>Oracle gave up trying to start — NOT the real error, just the result</td><td>Scroll UP to find the actual cause</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert danger">
+      <span class="alert-icon">🎯</span>
+      <div><strong>Critical Rule:</strong> When you see "Termination of instance" — that is NOT the problem. That is Oracle telling you "I tried and failed." Always scroll UP in the log to find the real error one or two lines above it.</div>
+    </div>
+
+    <h3>📁 Other Important Log Locations</h3>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Other Log Locations</span></div>
+      <pre><span class="cm"># Background process trace files (detailed crash info)</span>
+$ORACLE_BASE/diag/rdbms/&lt;dbname&gt;/&lt;SID&gt;/trace/
+
+<span class="cm"># RMAN logs (if your script uses tee/logging)</span>
+<span class="cm"># Look for $LOG_FILE variable in your RMAN script</span>
+grep -i "LOG_FILE\|log_file" /path/to/rman_script.sh
+
+<span class="cm"># Cron execution logs (did the scheduled job actually run?)</span>
+grep CRON /var/log/cron
+
+<span class="cm"># Syslog (system-level errors)</span>
+tail -50 /var/log/messages
+tail -50 /var/log/syslog    <span class="cm"># Debian/Ubuntu</span>
+
+<span class="cm"># Oracle audit files</span>
+$ORACLE_BASE/admin/&lt;SID&gt;/adump/</pre>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🧠</span> Key Concept: ADRCI Tool</div>
+      <p style="font-size:14px">Oracle provides a tool called <strong>ADRCI (ADR Command Interpreter)</strong> to work with diagnostic data without navigating file paths manually.</p>
+      <div class="code-block">
+        <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">ADRCI Tool</span></div>
+        <pre><span class="cm"># Launch ADRCI</span>
+adrci
+
+<span class="cm"># Inside ADRCI — show all homes</span>
+show homes
+
+<span class="cm"># Set your home</span>
+set home diag/rdbms/orcl/ORCL
+
+<span class="cm"># Show recent problems</span>
+show problem
+
+<span class="cm"># Show incidents (more detail)</span>
+show incident
+
+<span class="cm"># Exit</span>
+exit</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 2: STARTUP/SHUTDOWN ===== -->
+  <div class="section" id="module2">
+    <div class="section-header">
+      <span class="section-num">MODULE 02</span>
+      <h2 class="section-title">Instance Startup & Shutdown Sequence</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>Understanding the startup sequence is essential for troubleshooting. When a database fails to start, the <strong>stage at which it fails</strong> tells you exactly what kind of problem you have.</p>
+
+    <h3>🚀 Oracle Startup Sequence — 4 Stages</h3>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-stage">Stage 0 → Stage 1</div>
+        <div class="timeline-title">SHUTDOWN → NOMOUNT</div>
+        <div class="timeline-desc">
+          Oracle reads the <strong>parameter file</strong> (spfile or pfile), allocates the <strong>SGA (System Global Area)</strong> in memory, and starts <strong>background processes</strong> (PMON, SMON, DBWR, LGWR, CKPT, ARCn, etc.).
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Command</span></div>
+            <pre>STARTUP NOMOUNT;</pre>
+          </div>
+          <div class="alert warning" style="margin-top:8px"><span class="alert-icon">⚠️</span><div><strong>Failure here means:</strong> Missing or corrupt spfile/pfile, SGA too large for memory, insufficient OS privileges, or missing ORACLE_SID</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-stage">Stage 1 → Stage 2</div>
+        <div class="timeline-title">NOMOUNT → MOUNT</div>
+        <div class="timeline-desc">
+          Oracle reads the <strong>control files</strong>. The control file paths are defined in the parameter file. Oracle reads the control files to learn about the database structure — datafiles, redo logs, and DB name.
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Command</span></div>
+            <pre>ALTER DATABASE MOUNT;
+<span class="cm">-- Or from shutdown:</span>
+STARTUP MOUNT;</pre>
+          </div>
+          <div class="alert danger" style="margin-top:8px"><span class="alert-icon">🔴</span><div><strong>Failure here means:</strong> Control files are MISSING, at WRONG PATH, or CORRUPT. This is exactly what happened in the VM clone incident (ORA-00210, ORA-00202).</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-stage">Stage 2 → Stage 3</div>
+        <div class="timeline-title">MOUNT → OPEN</div>
+        <div class="timeline-desc">
+          Oracle opens the <strong>datafiles and redo log files</strong>. It verifies that the SCN (System Change Number) in the control file matches the datafiles — confirming a consistent database state.
+          <div class="code-block" style="margin-top:12px">
+            <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Command</span></div>
+            <pre>ALTER DATABASE OPEN;
+<span class="cm">-- Or from shutdown (full sequence):</span>
+STARTUP;</pre>
+          </div>
+          <div class="alert warning" style="margin-top:8px"><span class="alert-icon">⚠️</span><div><strong>Failure here means:</strong> Missing datafiles, missing redo logs, SCN mismatch (need recovery), or the database needs media recovery after crash.</div></div>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-stage">Stage 3</div>
+        <div class="timeline-title">OPEN — Database Running</div>
+        <div class="timeline-desc">
+          Users can connect. Oracle applies any redo from online redo logs if the previous shutdown was not clean (instance recovery). The database is fully operational.
+          <div class="alert success" style="margin-top:10px"><span class="alert-icon">✅</span><div>Database is open. Verify: <code class="inline-code">SELECT STATUS FROM V$INSTANCE;</code></div></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>🛑 Oracle Shutdown Modes</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Waits for Users?</th><th>Waits for Transactions?</th><th>Checkpoints?</th><th>When to Use</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code class="inline-code">SHUTDOWN NORMAL</code></td><td>Yes</td><td>Yes</td><td>Yes</td><td>Planned, patient maintenance (users can finish work)</td></tr>
+          <tr><td><code class="inline-code">SHUTDOWN TRANSACTIONAL</code></td><td>No new connections</td><td>Yes</td><td>Yes</td><td>Planned shutdown, finish open transactions only</td></tr>
+          <tr><td><code class="inline-code">SHUTDOWN IMMEDIATE</code></td><td>No — kicks users off</td><td>Rolls back active</td><td>Yes</td><td>✅ Standard planned shutdown — use this most often</td></tr>
+          <tr><td><code class="inline-code">SHUTDOWN ABORT</code></td><td>No</td><td>No — killed mid-flight</td><td>No</td><td>⚠️ Emergency only — next startup needs instance recovery</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert warning">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Never use SHUTDOWN ABORT casually.</strong> It's like pulling the power cord from a running PC. The next startup will perform automatic instance recovery, which can take time. Always prefer SHUTDOWN IMMEDIATE for planned work.</div>
+    </div>
+
+    <h3>🔍 Quick Diagnostic Commands by Stage</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Diagnostics by Stage</span></div>
+      <pre><span class="cm">-- Check what stage the database is at</span>
+<span class="kw">SELECT</span> STATUS <span class="kw">FROM</span> V$INSTANCE;
+<span class="cm">-- Returns: STARTED (nomount), MOUNTED, OPEN</span>
+
+<span class="cm">-- Check all background processes are running</span>
+<span class="kw">SELECT</span> NAME, DESCRIPTION <span class="kw">FROM</span> V$BGPROCESS
+<span class="kw">WHERE</span> PADDR != <span class="str">'00'</span>;
+
+<span class="cm">-- Check SGA allocation</span>
+<span class="kw">SHOW</span> SGA;
+
+<span class="cm">-- Verify control file status</span>
+<span class="kw">SELECT</span> NAME, STATUS <span class="kw">FROM</span> V$CONTROLFILE;
+
+<span class="cm">-- Verify datafile status</span>
+<span class="kw">SELECT</span> FILE#, NAME, STATUS <span class="kw">FROM</span> V$DATAFILE;</pre>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 3: INSTANCE TERMINATION ===== -->
+  <div class="section" id="module3">
+    <div class="section-header">
+      <span class="section-num">MODULE 03</span>
+      <h2 class="section-title">Understanding "Termination of Oracle Instance"</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <div class="highlight-bar">
+      <strong>"Termination of Oracle instance"</strong> = Oracle tried to start, something went wrong, so it shut itself down immediately. It is NOT the problem — it is Oracle's response to the problem.
+    </div>
+
+    <p>Think of it like a car engine: the engine turns over → a sensor detects a critical failure → the system shuts down to prevent damage. The warning light isn't the engine problem — it's the signal that something failed before or during startup.</p>
+
+    <h3>🔴 What Happens During a Failed Startup</h3>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Example: What You Might See in the Alert Log</span></div>
+      <pre><span class="cm">-- REAL EXAMPLE: What a failed startup looks like</span>
+
+Tue Mar 05 00:20:14 2024
+Starting ORACLE instance (normal) (OS id: 12345)
+...
+ORA-<span class="var">01078</span>: failure in processing system parameters
+LRM-<span class="var">00109</span>: could not open parameter file
+             <span class="str">'/u01/app/oracle/product/19c/dbs/initORCL.ora'</span>
+...
+<span class="kw">Termination of instance</span> ORCL (pid 12345)</pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">🎯</span>
+      <div><strong>How to read this:</strong> Oracle couldn't find the parameter file (<code class="inline-code">LRM-00109</code>). That's the real problem. Because of that, startup failed. Because startup failed, Oracle terminated the instance. The termination is the last line — work backwards from there.</div>
+    </div>
+
+    <h3>🔥 Common Root Causes of Instance Termination</h3>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">📄</span> Missing / Wrong Parameter File</div>
+        <ul class="bullet-list">
+          <li>Oracle looks for spfile&lt;SID&gt;.ora first</li>
+          <li>Then init&lt;SID&gt;.ora (pfile)</li>
+          <li>Located in <code class="inline-code">$ORACLE_HOME/dbs/</code></li>
+          <li>Check: <code class="inline-code">ls -la $ORACLE_HOME/dbs/</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">💾</span> SGA Too Large</div>
+        <ul class="bullet-list">
+          <li>sga_max_size exceeds available OS memory</li>
+          <li>Check: <code class="inline-code">free -m</code> on OS</li>
+          <li>Fix: Reduce SGA parameters in pfile</li>
+          <li>Error: ORA-27102 (out of memory)</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📁</span> Missing Control Files</div>
+        <ul class="bullet-list">
+          <li>Paths in control_files parameter don't exist</li>
+          <li>Common after VM clone or file move</li>
+          <li>Error: ORA-00210, ORA-00202</li>
+          <li>Check: <code class="inline-code">show parameter control_files</code></li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🔐</span> Permission Issues</div>
+        <ul class="bullet-list">
+          <li>Oracle files not owned by oracle:oinstall</li>
+          <li>Common after manual file copies</li>
+          <li>Fix: <code class="inline-code">chown oracle:oinstall &lt;file&gt;</code></li>
+          <li>Error: ORA-27040 or ORA-27047</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>🛠️ Your Immediate Response Plan</h3>
+    <ol class="steps">
+      <li><div class="step-content"><div class="step-title">Stay Calm — Read the Error Above Termination</div><div class="step-desc">Open the alert log. The termination line is at the bottom. The REAL error is 1–5 lines above it. That's what you're solving.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Identify the ORA- Error Code</div><div class="step-desc">Write it down. ORA-01078? Parameter file issue. ORA-00210? Control file issue. Each code tells you exactly where to look next.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Try to Reach NOMOUNT First</div><div class="step-desc">Run <code class="inline-code">STARTUP NOMOUNT;</code> — if this works, at least the parameter file is fine and memory allocated. Move to the next stage.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Fix the Root Cause</div><div class="step-desc">Based on the error: restore the file, fix paths, correct permissions, or reduce memory parameters.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Attempt Full Startup Again</div><div class="step-desc">Run <code class="inline-code">STARTUP;</code> and monitor the alert log in real-time with <code class="inline-code">tail -f alert_ORCL.log</code></div></div></li>
+    </ol>
+  </div>
+
+  <!-- ===== MODULE 4: ARCHIVE LOG ===== -->
+  <div class="section" id="module4">
+    <div class="section-header">
+      <span class="section-num">MODULE 04</span>
+      <h2 class="section-title">Archive Log Destination Full</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <div class="highlight-bar">
+      The archive log situation in this real incident had <strong>three layers</strong>: (1) disk appeared fine but FRA was logically full, (2) the backup job was configured correctly but never ran because the DB was down at midnight, (3) the deletion policy blocked cleanup because logs weren't backed up first.
+    </div>
+
+    <h3>📚 Key Concepts to Understand First</h3>
+
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-title"><span class="icon">🗂️</span> What Are Archive Logs?</div>
+        <p style="font-size:14px">In ARCHIVELOG mode, Oracle saves a copy of every filled redo log to a destination (FRA or custom path). These are used for point-in-time recovery. They accumulate constantly and must be managed.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">📦</span> What Is the FRA?</div>
+        <p style="font-size:14px">Fast Recovery Area — a disk location Oracle manages for backups, archive logs, and control file copies. It has a defined size limit. When it reaches capacity, Oracle stops archiving, which halts the database.</p>
+      </div>
+    </div>
+
+    <div class="alert danger">
+      <span class="alert-icon">🚨</span>
+      <div><strong>Key insight:</strong> Oracle does NOT care about OS free space. Even if you have 100GB free on the disk, if the FRA is logically "full" (at its configured limit), Oracle will stop. The FRA limit is a logical boundary you set, not a physical one.</div>
+    </div>
+
+    <h3>🔍 Step-by-Step Diagnosis</h3>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">STEP 1 — Check FRA Usage</span></div>
+      <pre><span class="cm">-- Check FRA configured space and current usage</span>
+<span class="kw">SELECT</span>
+  NAME,
+  SPACE_LIMIT/1024/1024/1024 <span class="str">"GB_LIMIT"</span>,
+  SPACE_USED/1024/1024/1024 <span class="str">"GB_USED"</span>,
+  SPACE_RECLAIMABLE/1024/1024/1024 <span class="str">"GB_RECLAIMABLE"</span>,
+  NUMBER_OF_FILES
+<span class="kw">FROM</span> V$RECOVERY_FILE_DEST;
+
+<span class="cm">-- Check OS-level disk space too</span>
+<span class="cm">-- (run from Linux shell, not SQL*Plus)</span>
+df -h</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">STEP 2 — Check RMAN Policies</span></div>
+      <pre><span class="cm">-- Connect to RMAN</span>
+rman target /
+
+<span class="cm">-- Check retention policy (how long backups are kept)</span>
+SHOW RETENTION POLICY;
+
+<span class="cm">-- Check archive log deletion policy (when Oracle is ALLOWED to delete)</span>
+SHOW ARCHIVELOG DELETION POLICY;
+
+<span class="cm">-- Check when backups last ran</span>
+LIST BACKUP OF ARCHIVELOG ALL;
+LIST BACKUP SUMMARY;</pre>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">STEP 3 — Check Current Archive Log Status</span></div>
+      <pre><span class="cm">-- From SQL*Plus</span>
+ARCHIVE LOG LIST;
+
+<span class="cm">-- Check archiving errors in alert log</span>
+grep -i "ORA-00257\|archiv" alert_ORCL.log | tail -20</pre>
+    </div>
+
+    <h3>🚨 Understanding the Deletion Policy (This Is Critical)</h3>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Deletion Policy Setting</th><th>Meaning</th><th>Risk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code class="inline-code">NONE</code></td><td>Oracle never automatically deletes archive logs</td><td><span class="badge badge-danger">HIGH — fills forever</span></td></tr>
+          <tr><td><code class="inline-code">BACKED UP 1 TIMES TO DISK</code></td><td>Oracle only deletes after log is backed up at least once</td><td><span class="badge badge-warning">MEDIUM — safe but requires backup job to run</span></td></tr>
+          <tr><td><code class="inline-code">APPLIED ON STANDBY</code></td><td>Only for Data Guard — delete after applied to standby</td><td><span class="badge badge-info">Data Guard only</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="alert warning">
+      <span class="alert-icon">💡</span>
+      <div><strong>The real incident used "BACKED UP 1 TIMES TO DISK."</strong> This is a safe policy — but only if backups are actually running. When the backup job failed silently, logs piled up because Oracle refused to delete un-backed-up logs. The policy was doing its job correctly — the backup job was the problem.</div>
+    </div>
+
+    <h3>🛠️ Fix: Immediate Recovery Steps</h3>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">RMAN — Backup Then Delete (Safe Method)</span></div>
+      <pre><span class="cm">-- Connect to RMAN</span>
+rman target /
+
+<span class="cm">-- Method 1: Backup first, then delete separately (most controlled)</span>
+BACKUP ARCHIVELOG ALL;
+DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';
+
+<span class="cm">-- Method 2: Backup AND delete in one command (efficient, urgent use)</span>
+BACKUP ARCHIVELOG ALL DELETE INPUT;
+
+<span class="cm">-- Method 3: Delete only what's obsolete per retention policy</span>
+REPORT OBSOLETE;
+DELETE OBSOLETE;
+
+<span class="cm">-- After cleanup, verify FRA recovered space</span>
+<span class="cm">-- (from SQL*Plus)</span>
+<span class="kw">SELECT</span> SPACE_USED/1024/1024/1024 <span class="str">"GB_USED"</span>
+<span class="kw">FROM</span> V$RECOVERY_FILE_DEST;</pre>
+    </div>
+
+    <div class="alert danger">
+      <span class="alert-icon">⛔</span>
+      <div><strong>NEVER manually delete archive logs from the OS with rm.</strong> Oracle won't know they were removed. RMAN metadata will show them as existing. Always use RMAN to delete archive logs so the catalog stays consistent.</div>
+    </div>
+
+    <h3>🔧 Fix: Resize the FRA (Temporary Mitigation)</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">SQL*Plus — Resize FRA</span></div>
+      <pre><span class="cm">-- Increase FRA size (this is what the student did: 50G → 70G)</span>
+ALTER SYSTEM SET DB_RECOVERY_FILE_DEST_SIZE = 70G SCOPE=BOTH;
+
+<span class="cm">-- Check new limit is active</span>
+SHOW PARAMETER DB_RECOVERY_FILE_DEST_SIZE;</pre>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="icon">🎓</span> Teaching Point: Temporary vs Permanent Fix</div>
+      <p style="font-size:14px">Increasing the FRA size buys time — it is NOT the solution. The real fix is:</p>
+      <ul class="bullet-list" style="margin-top:10px">
+        <li>Get backups running successfully again</li>
+        <li>Ensure the backup job runs while the database is UP</li>
+        <li>Set up monitoring/alerting so FRA issues are caught early</li>
+        <li>Verify deletion policy is appropriate and functioning</li>
+      </ul>
+    </div>
+
+    <h3>💥 Why the Backup Job Failed: Schedule Mismatch</h3>
+    <p>The root cause of this entire incident was a <strong>schedule mismatch</strong>:</p>
+
+    <div class="two-col">
+      <div class="card">
+        <div class="card-title"><span class="icon">🕔</span> Database Shutdown</div>
+        <p style="font-size:14px;color:var(--accent4)">Every day at 5:00 PM</p>
+        <p style="font-size:13px">This is a dev environment. The VM is shut down at end of business each day to save resources.</p>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="icon">🕛</span> RMAN Backup Script</div>
+        <p style="font-size:14px;color:var(--red)">Scheduled at 00:20 (midnight)</p>
+        <p style="font-size:13px">The script ran every night — but the database was not running. Result: ORA-01034 every time.</p>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">What the RMAN Log Showed (Root Cause Evidence)</span></div>
+      <pre>RMAN connected to target database (<span class="var">not started</span>)
+
+ORA-<span class="var">01034</span>: ORACLE not available
+ORA-<span class="var">27101</span>: shared memory realm does not exist
+<span class="cm">-- Translation: The database was DOWN when backup tried to run</span>
+<span class="cm">-- Every night since March 03: same failure, same silence</span></pre>
+    </div>
+
+    <h3>✅ Permanent Fix: Reschedule the Backup Job</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Linux Cron — Fix the Schedule</span></div>
+      <pre><span class="cm"># Edit the crontab</span>
+crontab -e
+
+<span class="cm"># OLD (broken): runs at midnight when DB is down</span>
+<span class="var">20 0</span> * * * /path/to/rman_backup.sh >> /path/to/backup.log 2>&1
+
+<span class="cm"># NEW (fixed): runs at 4:00 PM, before 5 PM shutdown</span>
+<span class="var">0 16</span> * * * /path/to/rman_backup.sh >> /path/to/backup.log 2>&1
+
+<span class="cm"># OR: runs at 8:15 AM after DB starts in the morning</span>
+<span class="var">15 8</span> * * * /path/to/rman_backup.sh >> /path/to/backup.log 2>&1
+
+<span class="cm"># Verify current crontab</span>
+crontab -l</pre>
+    </div>
+
+    <h3>🔍 Verifying Your RMAN Script Is Working</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Script Health Check</span></div>
+      <pre><span class="cm"># Find the LOG_FILE variable in your RMAN script</span>
+grep -i "LOG_FILE\|log_file" /path/to/rman_backup.sh
+
+<span class="cm"># If LOG_FILE is undefined, test it</span>
+echo $LOG_FILE
+<span class="cm"># If this returns blank → variable not set → no log output</span>
+
+<span class="cm"># Verify Oracle environment variables are set in cron script</span>
+grep -i "ORACLE_HOME\|ORACLE_SID\|PATH" /path/to/rman_backup.sh
+
+<span class="cm"># Check cron executed the job</span>
+grep CRON /var/log/cron | grep rman_backup
+
+<span class="cm"># Run the script manually to test</span>
+/path/to/rman_backup.sh
+
+<span class="cm"># Check RMAN backup history</span>
+rman target /
+LIST BACKUP SUMMARY;</pre>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 5: MISSING CONTROL FILES ===== -->
+  <div class="section" id="module5">
+    <div class="section-header">
+      <span class="section-num">MODULE 05</span>
+      <h2 class="section-title">Missing Control Files (ORA-00210 / ORA-00202)</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>Control files are the most critical file type in Oracle. They contain the map of the entire database — where every datafile and redo log lives, the database name, the current SCN, and backup history. Oracle cannot progress past NOMOUNT without them.</p>
+
+    <h3>🧠 What Happened: VM Clone Scenario</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Alert Log — What You'd See</span></div>
+      <pre>ORA-<span class="var">00210</span>: cannot open the specified control file
+ORA-<span class="var">00202</span>: control file: <span class="str">'/u01/oradata/ORCL/control01.ctl'</span>
+ORA-<span class="var">27037</span>: unable to obtain file status
+Linux-x86_64 Error: 2: No such file or directory
+...
+<span class="kw">Termination of instance</span> ORCL</pre>
+    </div>
+
+    <div class="alert info">
+      <span class="alert-icon">💡</span>
+      <div>ORA-00202 is actually helpful — it tells you exactly which file Oracle can't find. The path listed there is your starting point.</div>
+    </div>
+
+    <h3>🔍 Diagnose: Is It a Wrong Path or a Missing File?</h3>
+    <ol class="steps">
+      <li><div class="step-content"><div class="step-title">Get to NOMOUNT first</div><div class="step-desc"><code class="inline-code">STARTUP NOMOUNT;</code> — If this works, the parameter file is fine. The failure is at the MOUNT stage (control files).</div></div></li>
+      <li><div class="step-content"><div class="step-title">Check what paths Oracle expects</div><div class="step-desc"><code class="inline-code">SHOW PARAMETER control_files;</code> — Write down ALL paths listed. These are what Oracle is looking for.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Check if files exist at those paths (OS level)</div><div class="step-desc">For each path returned above, run <code class="inline-code">ls -l /path/to/control01.ctl</code> in Linux shell.</div></div></li>
+      <li><div class="step-content"><div class="step-title">Search for control files anywhere on the system</div><div class="step-desc"><code class="inline-code">find / -name "*.ctl" 2>/dev/null</code> — This finds any control files, even if in wrong locations.</div></div></li>
+    </ol>
+
+    <h3>🚀 Fix Options — Choosing the Right Approach</h3>
+
+    <div class="decision-tree">
+      <div>Are control files missing on the new VM?</div>
+      <div style="padding-left:20px">
+        <div>├── <span class="tree-yes">YES</span> → Do they exist on the source VM / old server?</div>
+        <div style="padding-left:20px">
+          <div>│   ├── <span class="tree-yes">YES</span> → <span class="tree-action">Option A: Copy control files from source</span></div>
+          <div>│   └── <span class="tree-no">NO</span> → Does an RMAN backup exist?</div>
+          <div style="padding-left:20px">
+            <div>│       ├── <span class="tree-yes">YES</span> → <span class="tree-action">Option B: RMAN RESTORE CONTROLFILE</span></div>
+            <div>│       └── <span class="tree-no">NO</span> → Do datafiles and redo logs exist?</div>
+            <div style="padding-left:20px">
+              <div>│           ├── <span class="tree-yes">YES</span> → <span class="tree-action">Option C: CREATE CONTROLFILE</span></div>
+              <div>│           └── <span class="tree-no">NO</span> → Database is unrecoverable without a valid backup</div>
+            </div>
+          </div>
+        </div>
+        <div>└── <span class="tree-no">NO</span> → Paths are just wrong</div>
+        <div style="padding-left:20px">
+          <div>    └── <span class="tree-action">Option D: Fix control_files parameter in pfile</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Option A: Copy Control Files from Source VM</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Safe Copy Procedure</span></div>
+      <pre><span class="cm">==== ON THE SOURCE (OLD) VM ====</span>
+<span class="cm"># Step 1: Shut down the source database cleanly FIRST</span>
+sqlplus / as sysdba
+SHUTDOWN IMMEDIATE;
+
+<span class="cm"># Step 2: Find control files</span>
+find /u01 /u02 -name "*.ctl" 2>/dev/null
+
+<span class="cm">==== FROM YOUR WORKSTATION / NEW VM ====</span>
+<span class="cm"># Step 3: Create destination directories on new VM</span>
+mkdir -p /u01/oradata/ORCL
+mkdir -p /u02/fra/ORCL
+
+<span class="cm"># Step 4: Copy control files via SCP</span>
+scp oracle@oldvm:/u01/oradata/ORCL/control01.ctl \
+    oracle@newvm:/u01/oradata/ORCL/
+scp oracle@oldvm:/u02/fra/ORCL/control02.ctl \
+    oracle@newvm:/u02/fra/ORCL/
+
+<span class="cm">==== ON THE NEW VM ====</span>
+<span class="cm"># Step 5: Fix ownership and permissions</span>
+chown oracle:oinstall /u01/oradata/ORCL/control01.ctl
+chown oracle:oinstall /u02/fra/ORCL/control02.ctl
+chmod 640 /u01/oradata/ORCL/control01.ctl
+chmod 640 /u02/fra/ORCL/control02.ctl
+
+<span class="cm"># Step 6: Attempt startup mount</span>
+sqlplus / as sysdba
+STARTUP MOUNT;
+
+<span class="cm"># Step 7: If mounted successfully, open the database</span>
+ALTER DATABASE OPEN;
+
+<span class="cm"># Step 8: Validate</span>
+SELECT STATUS FROM V$INSTANCE;
+SELECT NAME, STATUS FROM V$CONTROLFILE;</pre>
+    </div>
+
+    <h3>Option B: Restore from RMAN Backup</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">RMAN Restore Control File</span></div>
+      <pre><span class="cm">-- Connect to RMAN at NOMOUNT</span>
+sqlplus / as sysdba
+STARTUP NOMOUNT;
+exit
+
+rman target /
+
+<span class="cm">-- Restore from autobackup (if available)</span>
+RESTORE CONTROLFILE FROM AUTOBACKUP;
+
+<span class="cm">-- Or restore from a specific backup piece</span>
+RESTORE CONTROLFILE FROM '/path/to/backup/ctl_backup.bkp';
+
+<span class="cm">-- Mount after restore</span>
+ALTER DATABASE MOUNT;
+RECOVER DATABASE;
+ALTER DATABASE OPEN RESETLOGS;</pre>
+    </div>
+
+    <h3>Option C: Recreate Control File (Last Resort)</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">CREATE CONTROLFILE — Use only if no backup exists</span></div>
+      <pre><span class="cm">-- First: find a trace backup if Oracle created one previously</span>
+find $ORACLE_BASE -name "*.trc" | xargs grep -l "CREATE CONTROLFILE" 2>/dev/null
+
+<span class="cm">-- Basic CREATE CONTROLFILE template</span>
+<span class="cm">-- (You must list ALL datafiles and redo logs accurately)</span>
+STARTUP NOMOUNT;
+
+CREATE CONTROLFILE REUSE DATABASE "ORCL" RESETLOGS
+  MAXLOGFILES 16
+  MAXLOGMEMBERS 3
+  MAXDATAFILES 100
+  MAXINSTANCES 8
+LOGFILE
+  GROUP 1 '/u01/oradata/ORCL/redo01.log',
+  GROUP 2 '/u01/oradata/ORCL/redo02.log',
+  GROUP 3 '/u01/oradata/ORCL/redo03.log'
+DATAFILE
+  '/u01/oradata/ORCL/system01.dbf',
+  '/u01/oradata/ORCL/sysaux01.dbf',
+  '/u01/oradata/ORCL/users01.dbf',
+  '/u01/oradata/ORCL/undotbs01.dbf'
+CHARACTER SET AL32UTF8;
+
+ALTER DATABASE OPEN RESETLOGS;
+ALTER TABLESPACE TEMP ADD TEMPFILE '/u01/oradata/ORCL/temp01.dbf' SIZE 500M;</pre>
+    </div>
+
+    <div class="alert danger">
+      <span class="alert-icon">⚠️</span>
+      <div><strong>Option C is advanced and risky.</strong> Getting any datafile path wrong can corrupt recovery. Always prefer Options A or B. If you must use this, verify every file path on the OS before running the command.</div>
+    </div>
+
+    <h3>Option D: Fix Wrong Path in Parameter File</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Fix Paths in PFILE / SPFILE</span></div>
+      <pre><span class="cm">-- The files EXIST but Oracle is looking in the wrong directory</span>
+
+<span class="cm">-- Step 1: Export current spfile to pfile (editable text)</span>
+<span class="cm">-- (If you can reach NOMOUNT)</span>
+CREATE PFILE='/tmp/init_temp.ora' FROM SPFILE;
+
+<span class="cm">-- Step 2: Edit the pfile (in Linux shell)</span>
+vi /tmp/init_temp.ora
+<span class="cm">-- Find the control_files line and update paths to correct location</span>
+
+<span class="cm">-- Step 3: Startup using the corrected pfile</span>
+STARTUP PFILE='/tmp/init_temp.ora';
+
+<span class="cm">-- Step 4: If it works, recreate spfile from corrected pfile</span>
+CREATE SPFILE FROM PFILE='/tmp/init_temp.ora';
+
+<span class="cm">-- Step 5: Bounce database to use new spfile</span>
+SHUTDOWN IMMEDIATE;
+STARTUP;</pre>
+    </div>
+  </div>
+
+  <!-- ===== MODULE 6: RMAN ===== -->
+  <div class="section" id="module6">
+    <div class="section-header">
+      <span class="section-num">MODULE 06</span>
+      <h2 class="section-title">RMAN Backup Failures & Verification</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>RMAN (Recovery Manager) is Oracle's built-in backup and recovery tool. A junior DBA must know how to verify that backups are actually working — not just configured.</p>
+
+    <h3>🔑 Core Rule: Configuration ≠ Working</h3>
+    <div class="highlight-bar">Having a backup script scheduled does <strong>not</strong> mean backups are happening. Your job is to verify they actually ran and succeeded — every time. Automation without validation is just delayed failure.</div>
+
+    <h3>Essential RMAN Commands Every Junior DBA Needs</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">RMAN Reference Commands</span></div>
+      <pre><span class="cm">-- Connect to RMAN</span>
+rman target /
+
+<span class="cm">========= CHECKING CONFIGURATION =========</span>
+SHOW ALL;                          <span class="cm">-- All RMAN settings</span>
+SHOW RETENTION POLICY;             <span class="cm">-- How long backups are kept</span>
+SHOW ARCHIVELOG DELETION POLICY;   <span class="cm">-- When archive logs can be deleted</span>
+SHOW DEFAULT DEVICE TYPE;          <span class="cm">-- Where backups go (disk/tape)</span>
+
+<span class="cm">========= VERIFYING BACKUP HISTORY =========</span>
+LIST BACKUP SUMMARY;               <span class="cm">-- Overview of all backups</span>
+LIST BACKUP OF ARCHIVELOG ALL;     <span class="cm">-- Archive log backups only</span>
+LIST BACKUP OF DATABASE;           <span class="cm">-- Full database backups</span>
+LIST ARCHIVELOG ALL;               <span class="cm">-- All archive logs Oracle knows about</span>
+
+<span class="cm">========= CHECKING FOR PROBLEMS =========</span>
+REPORT OBSOLETE;                   <span class="cm">-- Backups outside retention window</span>
+REPORT NEED BACKUP;                <span class="cm">-- Files that need to be backed up</span>
+CROSSCHECK BACKUP;                 <span class="cm">-- Verify backup files still exist on disk</span>
+CROSSCHECK ARCHIVELOG ALL;         <span class="cm">-- Verify archive logs still exist</span>
+
+<span class="cm">========= RUNNING BACKUPS =========</span>
+BACKUP ARCHIVELOG ALL;             <span class="cm">-- Backup all archive logs</span>
+BACKUP ARCHIVELOG ALL DELETE INPUT;<span class="cm">-- Backup AND delete logs after</span>
+BACKUP DATABASE;                   <span class="cm">-- Full database backup</span>
+BACKUP DATABASE PLUS ARCHIVELOG;   <span class="cm">-- Database + archive logs together</span>
+
+<span class="cm">========= CLEANUP =========</span>
+DELETE OBSOLETE;                   <span class="cm">-- Delete backups outside retention</span>
+DELETE EXPIRED BACKUP;             <span class="cm">-- Delete catalog entries for missing files</span>
+DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2'; <span class="cm">-- Delete logs older than 2 days</span></pre>
+    </div>
+
+    <h3>🔧 Diagnosing a Failed Backup Script</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">RMAN Script Health Check Procedure</span></div>
+      <pre><span class="cm"># 1. Open the script and find key variables</span>
+cat /path/to/rman_backup.sh
+
+<span class="cm"># 2. Check for required Oracle environment variables</span>
+grep -E "ORACLE_HOME|ORACLE_SID|PATH|BACKUP_DIR|LOG_FILE" /path/to/rman_backup.sh
+
+<span class="cm"># 3. Test if variables are set in the current shell</span>
+echo $ORACLE_HOME
+echo $ORACLE_SID
+echo $LOG_FILE
+echo $BACKUP_DIR
+
+<span class="cm"># 4. Check cron actually executed the job</span>
+grep CRON /var/log/cron | grep -i backup | tail -20
+
+<span class="cm"># 5. Find and read the log file</span>
+<span class="cm"># (once you know LOG_FILE path from the script)</span>
+tail -50 /path/to/backup.log
+grep -i "ORA-\|RMAN-\|error\|failed" /path/to/backup.log
+
+<span class="cm"># 6. Run the script manually to test</span>
+bash /path/to/rman_backup.sh
+
+<span class="cm"># 7. Verify backup appeared in RMAN catalog</span>
+rman target /
+LIST BACKUP SUMMARY;</pre>
+    </div>
+
+    <h3>📋 RMAN Script Requirements Checklist</h3>
+    <p>Every RMAN script run from cron must have these elements or it will fail silently:</p>
+
+    <div class="card">
+      <ul class="checklist">
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>ORACLE_HOME</strong> — Full path to Oracle software (e.g., /u01/app/oracle/product/19c/dbhome_1)</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>ORACLE_SID</strong> — Database instance name (e.g., ORCL)</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>PATH</strong> — Must include $ORACLE_HOME/bin so rman command is found</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>BACKUP_DIR</strong> — Destination path for backup pieces (must exist and be writable)</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>LOG_FILE</strong> — Where script output is written (directory must exist)</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>Database is UP</strong> — Job schedule must align with database availability window</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>Error checking</strong> — Script should exit with error code on RMAN failure</li>
+        <li><span class="check-box" onclick="this.classList.toggle('checked');this.textContent=this.classList.contains('checked')?'✓':''">  </span><strong>Alerting</strong> — Failure should trigger email/notification to DBA team</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ===== HANDS-ON LABS ===== -->
+  <div class="section" id="labs">
+    <div class="section-header">
+      <span class="section-num">MODULE 07</span>
+      <h2 class="section-title">Hands-On Labs</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>These labs simulate the exact incidents from this course. Complete them on a test Oracle instance (never production). Each lab builds a skill you'll use in real incidents.</p>
+
+    <!-- LAB 1 -->
+    <div class="lab-card">
+      <div class="lab-header">
+        <div class="lab-title">Lab 1 — Navigate to the Alert Log & Find Errors</div>
+        <div class="lab-meta">
+          <span class="lab-difficulty difficulty-beginner">Beginner</span>
+          <span class="badge badge-info">~20 min</span>
+        </div>
+      </div>
+      <div class="lab-objective">
+        <strong>Objective:</strong> Locate the Oracle alert log, read it, search for errors, and practice the key alert log commands.
+      </div>
+      <ol class="steps">
+        <li><div class="step-content"><div class="step-title">Find Your Alert Log Location</div><div class="step-desc">Log into SQL*Plus as sysdba. Run <code class="inline-code">SELECT value FROM v$diag_info WHERE name = 'Diag Trace';</code> — write down the path returned.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Navigate to the Directory</div><div class="step-desc">Open a Linux shell. <code class="inline-code">cd</code> to the path from step 1. Run <code class="inline-code">ls -la</code> and confirm alert_&lt;SID&gt;.log exists.</div></div></li>
+        <li><div class="step-content"><div class="step-title">View Recent Events</div><div class="step-desc">Run <code class="inline-code">tail -50 alert_&lt;SID&gt;.log</code>. Identify the most recent startup and shutdown events.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Search for ORA Errors</div><div class="step-desc">Run <code class="inline-code">grep "ORA-" alert_&lt;SID&gt;.log</code>. Count how many errors appear. Are any repeating?</div></div></li>
+        <li><div class="step-content"><div class="step-title">Watch Live</div><div class="step-desc">Open a second terminal. In terminal 1, run <code class="inline-code">tail -f alert_&lt;SID&gt;.log</code>. In terminal 2, connect via SQL*Plus and run a simple query. Observe if anything appears in terminal 1.</div></div></li>
+      </ol>
+      <div class="alert success" style="margin-top:16px">
+        <span class="alert-icon">✅</span>
+        <div><strong>Success criteria:</strong> You can find the alert log, read it, and search for errors without help. You know where to go first when something breaks.</div>
+      </div>
+    </div>
+
+    <!-- LAB 2 -->
+    <div class="lab-card">
+      <div class="lab-header">
+        <div class="lab-title">Lab 2 — Simulate & Recover from Archive Log Full</div>
+        <div class="lab-meta">
+          <span class="lab-difficulty difficulty-intermediate">Intermediate</span>
+          <span class="badge badge-info">~45 min</span>
+        </div>
+      </div>
+      <div class="lab-objective">
+        <strong>Objective:</strong> Temporarily reduce FRA size to force the archive full condition, then recover from it using RMAN.
+      </div>
+      <ol class="steps">
+        <li><div class="step-content"><div class="step-title">Check Current FRA Size and Usage</div><div class="step-desc">Run: <code class="inline-code">SELECT SPACE_LIMIT/1024/1024/1024 GB_LIMIT, SPACE_USED/1024/1024/1024 GB_USED FROM V$RECOVERY_FILE_DEST;</code> — document baseline values.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Check RMAN Policies</div><div class="step-desc">In RMAN: <code class="inline-code">SHOW RETENTION POLICY;</code> and <code class="inline-code">SHOW ARCHIVELOG DELETION POLICY;</code> — document what you find.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Verify Last Backup Date</div><div class="step-desc">In RMAN: <code class="inline-code">LIST BACKUP OF ARCHIVELOG ALL;</code> — note the most recent backup date.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Simulate the Fix: Backup Archive Logs</div><div class="step-desc">In RMAN: <code class="inline-code">BACKUP ARCHIVELOG ALL;</code> — wait for it to complete successfully.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Clean Up Old Logs</div><div class="step-desc">In RMAN: <code class="inline-code">DELETE ARCHIVELOG ALL COMPLETED BEFORE 'SYSDATE-2';</code> — confirm deletion.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Verify FRA Space Recovered</div><div class="step-desc">Re-run the V$RECOVERY_FILE_DEST query. Confirm GB_USED decreased.</div></div></li>
+      </ol>
+      <div class="alert success" style="margin-top:16px">
+        <span class="alert-icon">✅</span>
+        <div><strong>Success criteria:</strong> You backed up archive logs via RMAN and safely deleted old ones. FRA usage decreased. You understand why deleting via RMAN is required, not OS commands.</div>
+      </div>
+    </div>
+
+    <!-- LAB 3 -->
+    <div class="lab-card">
+      <div class="lab-header">
+        <div class="lab-title">Lab 3 — Simulate Missing Control File Recovery</div>
+        <div class="lab-meta">
+          <span class="lab-difficulty difficulty-advanced">Advanced</span>
+          <span class="badge badge-info">~60 min</span>
+        </div>
+      </div>
+      <div class="lab-objective">
+        <strong>Objective:</strong> Copy a control file to a temp location, update the parameter file to point to the wrong path, observe the startup failure, then recover by restoring the control file.
+      </div>
+      <div class="alert warning" style="margin-bottom:16px">
+        <span class="alert-icon">⚠️</span>
+        <div><strong>Test environment only.</strong> Do this only on a non-production database you can afford to break and restore.</div>
+      </div>
+      <ol class="steps">
+        <li><div class="step-content"><div class="step-title">Document Current Control File Locations</div><div class="step-desc"><code class="inline-code">SHOW PARAMETER control_files;</code> — write down ALL paths.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Create a Backup Copy of Control File</div><div class="step-desc">In Linux: <code class="inline-code">cp /u01/oradata/ORCL/control01.ctl /tmp/control01.ctl.bak</code></div></div></li>
+        <li><div class="step-content"><div class="step-title">Simulate Missing File</div><div class="step-desc">Shut down the database with SHUTDOWN IMMEDIATE. Then rename the control file: <code class="inline-code">mv /u01/oradata/ORCL/control01.ctl /tmp/control01_moved.ctl</code></div></div></li>
+        <li><div class="step-content"><div class="step-title">Try to Start the Database</div><div class="step-desc">Run <code class="inline-code">STARTUP;</code>. Observe the error. Read the alert log to confirm ORA-00210/ORA-00202.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Recover: Restore the File</div><div class="step-desc"><code class="inline-code">mv /tmp/control01_moved.ctl /u01/oradata/ORCL/control01.ctl</code> — Verify permissions with <code class="inline-code">ls -la</code>.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Start Database and Validate</div><div class="step-desc"><code class="inline-code">STARTUP;</code> — Confirm database opens. Check <code class="inline-code">SELECT NAME, STATUS FROM V$CONTROLFILE;</code></div></div></li>
+      </ol>
+      <div class="alert success" style="margin-top:16px">
+        <span class="alert-icon">✅</span>
+        <div><strong>Success criteria:</strong> You observed the exact error a missing control file produces, read it in the alert log, and successfully recovered from it.</div>
+      </div>
+    </div>
+
+    <!-- LAB 4 -->
+    <div class="lab-card">
+      <div class="lab-header">
+        <div class="lab-title">Lab 4 — Diagnose a "Silent" Cron Backup Failure</div>
+        <div class="lab-meta">
+          <span class="lab-difficulty difficulty-intermediate">Intermediate</span>
+          <span class="badge badge-info">~30 min</span>
+        </div>
+      </div>
+      <div class="lab-objective">
+        <strong>Objective:</strong> Write a simple RMAN backup script, schedule it in cron without proper environment variables (to simulate a broken script), observe the failure, then fix it.
+      </div>
+      <ol class="steps">
+        <li><div class="step-content"><div class="step-title">Create a Simple RMAN Test Script</div><div class="step-desc">Write a bash script that runs <code class="inline-code">rman target / @backup.rman</code> without setting ORACLE_HOME or ORACLE_SID. Schedule it in cron to run 2 minutes from now.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Observe the Failure</div><div class="step-desc">Wait 3 minutes. Check <code class="inline-code">grep CRON /var/log/cron</code> to confirm it ran. Check the output log — it should show "rman: command not found" or similar.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Fix the Script</div><div class="step-desc">Add the required environment variable exports at the top of the script: ORACLE_HOME, ORACLE_SID, and updated PATH. Reschedule for 2 minutes from now.</div></div></li>
+        <li><div class="step-content"><div class="step-title">Verify Success</div><div class="step-desc">Wait 3 minutes. Check the log output. Confirm RMAN connected and backup ran successfully. Verify in RMAN with <code class="inline-code">LIST BACKUP SUMMARY;</code></div></div></li>
+      </ol>
+      <div class="alert success" style="margin-top:16px">
+        <span class="alert-icon">✅</span>
+        <div><strong>Success criteria:</strong> You understand why cron jobs need explicit environment variables, and you can diagnose and fix a silently failing backup script.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SCENARIOS ===== -->
+  <div class="section" id="scenarios">
+    <div class="section-header">
+      <span class="section-num">MODULE 08</span>
+      <h2 class="section-title">Scenario-Based Simulations</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>Work through each scenario as if it's a real incident. You receive the alert — what do you do? Walk through each step before looking at the suggested actions.</p>
+
+    <div class="scenario-card">
+      <div class="scenario-label">🚨 SCENARIO 01</div>
+      <div class="scenario-title">Monday 8AM: "The Database Won't Connect"</div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:14px">You arrive at work. A developer calls saying they can't connect to the database. They're getting "ORA-01034: ORACLE not available." You have SSH access to the server.</p>
+      <details style="cursor:pointer">
+        <summary style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;padding:8px 0">▶ Show Suggested Approach</summary>
+        <div class="code-block" style="margin-top:12px">
+          <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Walkthrough</span></div>
+          <pre><span class="cm"># 1. SSH to the server and check if Oracle process is running</span>
+ps -ef | grep -i pmon
+
+<span class="cm"># 2. If no PMON process, instance is down. Try to start it</span>
+sqlplus / as sysdba
+STARTUP;
+
+<span class="cm"># 3. If startup fails, read the alert log immediately</span>
+tail -100 $ORACLE_BASE/diag/rdbms/&lt;dbname&gt;/&lt;SID&gt;/trace/alert_&lt;SID&gt;.log
+
+<span class="cm"># 4. Find the ORA- error ABOVE any "Termination of instance" message</span>
+grep -B10 "Termination" alert_&lt;SID&gt;.log | tail -20
+
+<span class="cm"># 5. Based on the error code, follow the appropriate resolution path</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-label">🚨 SCENARIO 02</div>
+      <div class="scenario-title">FRA at 95% — You Have 30 Minutes Before It Fills</div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:14px">A monitoring alert fires. The FRA is at 95% usage. The database is still up. You need to prevent an outage. You know the last backup ran 3 days ago.</p>
+      <details style="cursor:pointer">
+        <summary style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;padding:8px 0">▶ Show Suggested Approach</summary>
+        <div class="code-block" style="margin-top:12px">
+          <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Emergency Walkthrough</span></div>
+          <pre><span class="cm">-- Step 1: Verify the situation</span>
+<span class="kw">SELECT</span> SPACE_USED/SPACE_LIMIT*100 PCT_FULL <span class="kw">FROM</span> V$RECOVERY_FILE_DEST;
+
+<span class="cm">-- Step 2: Check deletion policy</span>
+rman target /
+SHOW ARCHIVELOG DELETION POLICY;
+
+<span class="cm">-- Step 3: If policy requires backup first, run backup immediately</span>
+BACKUP ARCHIVELOG ALL DELETE INPUT;
+<span class="cm">-- This backs up AND deletes in one shot — good for urgent situations</span>
+
+<span class="cm">-- Step 4: Monitor FRA usage dropping</span>
+<span class="kw">SELECT</span> SPACE_USED/1024/1024/1024 GB_USED <span class="kw">FROM</span> V$RECOVERY_FILE_DEST;
+
+<span class="cm">-- Step 5: If still tight, temporarily increase FRA size</span>
+ALTER SYSTEM SET DB_RECOVERY_FILE_DEST_SIZE = &lt;larger_size&gt;G SCOPE=BOTH;
+
+<span class="cm">-- Step 6: Investigate why backup stopped running</span></pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-label">🚨 SCENARIO 03</div>
+      <div class="scenario-title">New VM Clone: Database Refuses to Start at MOUNT Stage</div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:14px">A new dev server was just built from a VM clone. The DBA before you left and said "just start the database." You try STARTUP and get ORA-00210. The source VM is still available.</p>
+      <details style="cursor:pointer">
+        <summary style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;padding:8px 0">▶ Show Suggested Approach</summary>
+        <div class="code-block" style="margin-top:12px">
+          <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Recovery Walkthrough</span></div>
+          <pre><span class="cm">-- Step 1: Confirm you can reach NOMOUNT (parameter file OK)</span>
+STARTUP NOMOUNT;
+
+<span class="cm">-- Step 2: Find out what paths Oracle is looking for</span>
+SHOW PARAMETER control_files;
+
+<span class="cm">-- Step 3: Check if those files exist on THIS server</span>
+<span class="cm">-- (run in Linux shell)</span>
+ls -la /path/from/step2
+
+<span class="cm">-- Step 4: If missing, search for .ctl files on this server</span>
+find / -name "*.ctl" 2>/dev/null
+
+<span class="cm">-- Step 5: Since source VM is available, shutdown source DB cleanly</span>
+<span class="cm">-- On source VM:</span>
+SHUTDOWN IMMEDIATE;
+
+<span class="cm">-- Step 6: Copy control files from source to new VM</span>
+scp oracle@sourcevm:/path/control01.ctl oracle@newvm:/expected/path/
+
+<span class="cm">-- Step 7: Fix permissions on new VM</span>
+chown oracle:oinstall /path/control01.ctl
+
+<span class="cm">-- Step 8: Try startup mount and open</span>
+STARTUP MOUNT;
+ALTER DATABASE OPEN;</pre>
+        </div>
+      </details>
+    </div>
+
+    <div class="scenario-card">
+      <div class="scenario-label">🚨 SCENARIO 04</div>
+      <div class="scenario-title">Backup Job Has Been "Running" But No Backups Exist</div>
+      <p style="font-size:14px;color:var(--text2);margin-bottom:14px">You're asked to verify backups are running. You check the crontab — job is there, scheduled daily. But when you check RMAN, LIST BACKUP SUMMARY shows nothing for the last 2 weeks. What happened?</p>
+      <details style="cursor:pointer">
+        <summary style="color:var(--accent);font-size:13px;font-family:'JetBrains Mono',monospace;padding:8px 0">▶ Show Suggested Approach</summary>
+        <div class="code-block" style="margin-top:12px">
+          <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Diagnosis Walkthrough</span></div>
+          <pre><span class="cm"># 1. Confirm cron runs the job (not just has it listed)</span>
+grep CRON /var/log/cron | grep backup | tail -20
+
+<span class="cm"># 2. Find the log file in the script</span>
+grep -i "LOG_FILE" /path/to/rman_backup.sh
+
+<span class="cm"># 3. Read the log file for errors</span>
+tail -100 /path/to/backup.log
+grep -i "ORA-\|RMAN-\|error\|failed" /path/to/backup.log
+
+<span class="cm"># Most likely you'll see ORA-01034 if DB was down</span>
+<span class="cm"># Or "rman: command not found" if env variables are missing</span>
+
+<span class="cm"># 4. Test the script manually</span>
+bash /path/to/rman_backup.sh
+
+<span class="cm"># 5. Fix the root cause (environment vars, schedule alignment)</span>
+<span class="cm"># 6. Run a manual backup to catch up</span>
+rman target /
+BACKUP ARCHIVELOG ALL;</pre>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <!-- ===== RUNBOOKS ===== -->
+  <div class="section" id="runbooks">
+    <div class="section-header">
+      <span class="section-num">MODULE 09</span>
+      <h2 class="section-title">Runbooks & SOPs</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>These are your operational reference documents. Print them, bookmark them, and pull them out during real incidents. They are designed to be followed step-by-step under pressure.</p>
+
+    <!-- RUNBOOK 1 -->
+    <div class="runbook">
+      <div class="runbook-header">
+        <span class="runbook-icon">📕</span>
+        <div>
+          <div class="runbook-title">RUNBOOK-01: Database Won't Start</div>
+          <div class="runbook-subtitle">Trigger: STARTUP fails | ORA-01034 | Termination of instance</div>
+        </div>
+        <span class="badge badge-danger">P1</span>
+      </div>
+      <div class="runbook-body">
+        <div class="sop-meta">
+          <span>Owner: DBA Team</span>
+          <span>Est. Time: 15-30 min</span>
+          <span>Last Update: See version control</span>
+        </div>
+        <ol class="steps">
+          <li><div class="step-content"><div class="step-title">Read the Alert Log Immediately</div><div class="step-desc"><code class="inline-code">tail -100 $ORACLE_BASE/diag/rdbms/&lt;db&gt;/&lt;SID&gt;/trace/alert_&lt;SID&gt;.log</code><br>Find the ORA- error ABOVE "Termination of instance." Write it down.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Attempt STARTUP NOMOUNT</div><div class="step-desc"><code class="inline-code">STARTUP NOMOUNT;</code><br>If SUCCESS → parameter file is OK, problem is at MOUNT stage (control files)<br>If FAIL → problem is with parameter file, memory, or OS</div></div></li>
+          <li><div class="step-content"><div class="step-title">Diagnose Based on ORA- Error Code</div><div class="step-desc">ORA-01078 / LRM-00109 → Missing pfile/spfile → Restore from backup or recreate<br>ORA-27102 → SGA too large → Reduce memory params in pfile<br>ORA-00210 → Missing control files → Go to RUNBOOK-03<br>ORA-00600 → Internal error → Escalate immediately, preserve trace files</div></div></li>
+          <li><div class="step-content"><div class="step-title">Attempt STARTUP MOUNT (if NOMOUNT worked)</div><div class="step-desc"><code class="inline-code">ALTER DATABASE MOUNT;</code><br>If FAIL → Control file issue → See RUNBOOK-03</div></div></li>
+          <li><div class="step-content"><div class="step-title">Open the Database</div><div class="step-desc"><code class="inline-code">ALTER DATABASE OPEN;</code><br>If FAIL → Datafile/redo log issue → Check <code class="inline-code">SELECT FILE#, STATUS FROM V$DATAFILE;</code></div></div></li>
+          <li><div class="step-content"><div class="step-title">Notify Users and Team</div><div class="step-desc">Send status update to affected teams. Include: what the issue was, what you did, ETA to full resolution.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Document the Incident</div><div class="step-desc">Record the timeline, error codes, root cause, and resolution steps in your incident log.</div></div></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- RUNBOOK 2 -->
+    <div class="runbook">
+      <div class="runbook-header">
+        <span class="runbook-icon">📗</span>
+        <div>
+          <div class="runbook-title">RUNBOOK-02: Archive Log Destination Full / FRA Full</div>
+          <div class="runbook-subtitle">Trigger: ORA-00257 | DB hangs | FRA > 90%</div>
+        </div>
+        <span class="badge badge-danger">P1</span>
+      </div>
+      <div class="runbook-body">
+        <div class="sop-meta">
+          <span>Owner: DBA Team</span>
+          <span>Est. Time: 20-45 min</span>
+        </div>
+        <ol class="steps">
+          <li><div class="step-content"><div class="step-title">Confirm the Problem</div><div class="step-desc"><code class="inline-code">SELECT SPACE_LIMIT/1024/1024/1024 GB_LIMIT, SPACE_USED/1024/1024/1024 GB_USED, (SPACE_USED/SPACE_LIMIT)*100 PCT_USED FROM V$RECOVERY_FILE_DEST;</code></div></div></li>
+          <li><div class="step-content"><div class="step-title">Check Archive Log Deletion Policy</div><div class="step-desc">In RMAN: <code class="inline-code">SHOW ARCHIVELOG DELETION POLICY;</code> — Is deletion policy set? Does it require backup first?</div></div></li>
+          <li><div class="step-content"><div class="step-title">Check Last Backup Date</div><div class="step-desc">In RMAN: <code class="inline-code">LIST BACKUP OF ARCHIVELOG ALL;</code> — When did the last backup run? Is it recent enough?</div></div></li>
+          <li><div class="step-content"><div class="step-title">EMERGENCY: Run Backup + Delete Now</div><div class="step-desc">In RMAN: <code class="inline-code">BACKUP ARCHIVELOG ALL DELETE INPUT;</code> — This backs up and deletes in one step. Most appropriate under pressure.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Verify Space Recovered</div><div class="step-desc">Re-run step 1 query. Confirm GB_USED decreased significantly. Also check: <code class="inline-code">df -h</code> from Linux shell.</div></div></li>
+          <li><div class="step-content"><div class="step-title">If Still Critical — Temporarily Increase FRA</div><div class="step-desc"><code class="inline-code">ALTER SYSTEM SET DB_RECOVERY_FILE_DEST_SIZE = &lt;new_size&gt;G SCOPE=BOTH;</code> — This buys time but is NOT a permanent fix.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Find Why Backups Stopped</div><div class="step-desc">Check cron: <code class="inline-code">crontab -l</code>. Check cron execution: <code class="inline-code">grep CRON /var/log/cron | grep backup</code>. Find and read the log file from the RMAN script.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Fix the Root Cause & Verify Automation</div><div class="step-desc">Fix schedule, environment variables, or script issues. Run a manual backup to confirm. Verify in RMAN with LIST BACKUP SUMMARY.</div></div></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- RUNBOOK 3 -->
+    <div class="runbook">
+      <div class="runbook-header">
+        <span class="runbook-icon">📘</span>
+        <div>
+          <div class="runbook-title">RUNBOOK-03: Missing Control Files</div>
+          <div class="runbook-subtitle">Trigger: ORA-00210, ORA-00202 | Startup fails at MOUNT stage</div>
+        </div>
+        <span class="badge badge-danger">P1</span>
+      </div>
+      <div class="runbook-body">
+        <div class="sop-meta">
+          <span>Owner: DBA Team</span>
+          <span>Est. Time: 30-60 min</span>
+        </div>
+        <ol class="steps">
+          <li><div class="step-content"><div class="step-title">Confirm Startup Reaches NOMOUNT</div><div class="step-desc"><code class="inline-code">STARTUP NOMOUNT;</code> — If this works, the problem is specifically the control files (not the parameter file or memory).</div></div></li>
+          <li><div class="step-content"><div class="step-title">Get Expected Control File Paths</div><div class="step-desc"><code class="inline-code">SHOW PARAMETER control_files;</code> — Write down ALL paths. These are exactly where Oracle is looking.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Check If Files Exist</div><div class="step-desc">For each path, run <code class="inline-code">ls -la /path/to/control.ctl</code> in Linux. Does the file exist? If yes → permissions/corrupt issue. If no → file is missing.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Search for Control Files on This Server</div><div class="step-desc"><code class="inline-code">find / -name "*.ctl" 2>/dev/null</code> — Are they in a different location? If yes → Fix paths in parameter file.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Choose Recovery Method (Use Decision Tree)</div><div class="step-desc">Source VM available → Copy files (RUNBOOK-03A). RMAN backup exists → Restore (RUNBOOK-03B). No backup or source → Recreate (RUNBOOK-03C — escalate if unsure).</div></div></li>
+          <li><div class="step-content"><div class="step-title">Attempt Startup After Recovery</div><div class="step-desc"><code class="inline-code">STARTUP MOUNT; ALTER DATABASE OPEN;</code> — Monitor alert log for any new errors.</div></div></li>
+          <li><div class="step-content"><div class="step-title">Validate Database Integrity</div><div class="step-desc"><code class="inline-code">SELECT NAME, STATUS FROM V$CONTROLFILE;</code> and <code class="inline-code">SELECT FILE#, STATUS, NAME FROM V$DATAFILE;</code></div></div></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- SOP 1 -->
+    <div class="sop">
+      <div class="sop-title">📋 SOP: How to Communicate During an Incident</div>
+      <div class="sop-meta">
+        <span>Type: Communication</span>
+        <span>Use: Any severity incident</span>
+      </div>
+      <p>When something breaks, your manager and team need to know three things: <strong>what is wrong, what you're doing about it,</strong> and <strong>when they'll hear from you next.</strong> Nothing more.</p>
+
+      <h4>Initial Alert (Send within 15 minutes)</h4>
+      <div class="card" style="background:var(--code-bg)">
+        <p style="font-size:13.5px;font-family:'JetBrains Mono',monospace;color:var(--text2)">
+          Subject: [ENV] Database Issue – Investigation In Progress<br><br>
+          Hi [Manager],<br><br>
+          [System/DB name] is experiencing [brief description — e.g., "startup failure" / "FRA near capacity"]. I am currently investigating.<br><br>
+          Will update within 30 minutes.<br><br>
+          [Your Name]
+        </p>
+      </div>
+
+      <h4>Status Update (Every 30-60 min until resolved)</h4>
+      <div class="card" style="background:var(--code-bg)">
+        <p style="font-size:13.5px;font-family:'JetBrains Mono',monospace;color:var(--text2)">
+          Subject: [ENV] Database Issue – Root Cause Identified<br><br>
+          Hi [Manager],<br><br>
+          Root cause confirmed: [one sentence explanation].<br><br>
+          Current status: [what you are doing right now].<br><br>
+          Next update: [time].<br><br>
+          [Your Name]
+        </p>
+      </div>
+
+      <h4>Resolution Notice</h4>
+      <div class="card" style="background:var(--code-bg)">
+        <p style="font-size:13.5px;font-family:'JetBrains Mono',monospace;color:var(--text2)">
+          Subject: [ENV] Database Issue – RESOLVED<br><br>
+          Hi [Manager],<br><br>
+          The issue has been resolved. [Brief what was done]. Database is now fully operational.<br><br>
+          Root cause: [one sentence]. Permanent fix: [one sentence].<br><br>
+          [Your Name]
+        </p>
+      </div>
+
+      <div class="alert info" style="margin-top:14px">
+        <span class="alert-icon">💡</span>
+        <div><strong>Rule:</strong> Short messages signal control. Long messages with too many details signal panic. When you are still investigating, say so clearly — never imply you are almost done when you are not.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== ASSESSMENT ===== -->
+  <div class="section" id="assessment">
+    <div class="section-header">
+      <span class="section-num">MODULE 10</span>
+      <h2 class="section-title">Assessment — Test Your Knowledge</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <p>Answer all questions. Click "Show Answer" to check yourself. Target score: 80% or higher before you consider yourself ready for on-call duty on these topics.</p>
+
+    <h3>Section A: Concept Questions</h3>
+
+    <div class="question-card">
+      <div class="q-num">Question A-01 · Alert Logs</div>
+      <div class="q-text">You see "Termination of Oracle instance" in the alert log. What should you do FIRST?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>Restart the database immediately</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">B</span>Call your manager</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">C</span>Scroll up in the alert log to find the real ORA- error above this message</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>Reboot the server</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>C is correct.</strong> "Termination of instance" is Oracle's response to a failure — not the failure itself. The real error is 1–5 lines above it in the alert log. Always read upward from the termination message.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question A-02 · Startup Sequence</div>
+      <div class="q-text">Oracle starts to NOMOUNT successfully, but fails when you try to MOUNT. What does this tell you?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>The parameter file (spfile/pfile) is corrupted</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">B</span>The control files are missing, at the wrong path, or corrupted</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">C</span>The SGA is too large for the available memory</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>The redo logs are missing</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>B is correct.</strong> NOMOUNT reads the parameter file and allocates the SGA — if that succeeds, those are fine. MOUNT is where Oracle reads the control files. A failure at MOUNT means control file issues.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question A-03 · Archive Logs</div>
+      <div class="q-text">The FRA is logically full but the OS shows plenty of free disk space. Why is Oracle still blocking archiving?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>Oracle has a bug that doesn't check OS disk space</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">B</span>Oracle respects the DB_RECOVERY_FILE_DEST_SIZE limit, not OS free space</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">C</span>The archive log format is wrong</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>The RMAN catalog is corrupted</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>B is correct.</strong> The FRA has a configured size limit (DB_RECOVERY_FILE_DEST_SIZE). Oracle manages space within that limit regardless of how much actual disk space is available. To fix this: backup and delete old logs, or increase the FRA size parameter.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question A-04 · Deletion Policy</div>
+      <div class="q-text">SHOW ARCHIVELOG DELETION POLICY returns "BACKED UP 1 TIMES TO DISK" and backups stopped 10 days ago. What happens to archive logs?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>Oracle automatically deletes them after 7 days regardless</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">B</span>Nothing — they are kept forever</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">C</span>Oracle refuses to delete any archive logs because they haven't been backed up</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>RMAN deletes them during the next connection</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>C is correct.</strong> The deletion policy "BACKED UP 1 TIMES TO DISK" means Oracle will ONLY delete archive logs after they have been backed up at least once. If backups stop running, logs accumulate indefinitely — even logs from weeks ago — until backed up.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question A-05 · Cron & Environment</div>
+      <div class="q-text">An RMAN backup script works when run manually as oracle, but fails every night in cron. The most likely reason is:</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>The database is too busy at night</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">B</span>Cron doesn't inherit the oracle user's environment variables (ORACLE_HOME, ORACLE_SID, PATH)</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">C</span>RMAN doesn't work with cron</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>The backup destination is too small</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>B is correct.</strong> Cron runs in a minimal environment without the user's shell profile loaded. ORACLE_HOME, ORACLE_SID, and PATH must be explicitly exported inside the script itself, or Oracle commands like rman and sqlplus won't be found.</div>
+    </div>
+
+    <h3 style="margin-top:30px">Section B: Short Answer</h3>
+
+    <div class="question-card">
+      <div class="q-num">Question B-01</div>
+      <div class="q-text">What command would you run to find the exact path of the Oracle alert log from within SQL*Plus?</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer"><code class="inline-code">SELECT value FROM v$diag_info WHERE name = 'Diag Trace';</code><br>This returns the directory path. The alert log filename is <code class="inline-code">alert_&lt;SID&gt;.log</code> in that directory.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question B-02</div>
+      <div class="q-text">What is the difference between RMAN's RETENTION POLICY and ARCHIVELOG DELETION POLICY?</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer"><strong>Retention Policy</strong>: Defines how long BACKUP PIECES are kept (e.g., "RECOVERY WINDOW OF 7 DAYS" means keep enough backups to recover from any point in the last 7 days).<br><br><strong>Archivelog Deletion Policy</strong>: Defines WHEN Oracle is allowed to delete archive log files (e.g., "BACKED UP 1 TIMES" means only delete after backed up at least once). These are separate settings that work together.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question B-03</div>
+      <div class="q-text">Why should you NEVER delete Oracle archive logs directly from the OS using the <code class="inline-code">rm</code> command?</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">Oracle's RMAN catalog maintains a record of every archive log file it knows about. If you delete files directly from the OS, the RMAN catalog still shows them as existing. This causes RMAN to report errors, backups to fail trying to include missing files, and recovery to potentially fail. Always use RMAN DELETE commands so the catalog stays in sync with reality.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question B-04</div>
+      <div class="q-text">A junior DBA runs <code class="inline-code">BACKUP ARCHIVELOG ALL DELETE INPUT</code> — explain what this single command does in two steps.</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">Step 1: RMAN backs up all archive logs that have not yet been backed up (and any that need to be backed up again per policy).<br><br>Step 2: Immediately after backing each log up successfully, RMAN deletes it — both from disk AND updates the catalog. This is the safe, efficient single-command approach for urgent FRA cleanup.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question B-05</div>
+      <div class="q-text">A VM was cloned from a production server. The cloned database fails at MOUNT with ORA-00210. You have no RMAN backup. The source VM is available. List the steps to recover.</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">
+        1. Run STARTUP NOMOUNT on the new VM to confirm parameter file works<br>
+        2. Run SHOW PARAMETER control_files to get the expected paths<br>
+        3. Shut down the SOURCE database cleanly (SHUTDOWN IMMEDIATE)<br>
+        4. Create destination directories on the new VM if needed (mkdir -p)<br>
+        5. Copy control files from source VM using scp<br>
+        6. Fix ownership and permissions on new VM (chown oracle:oinstall; chmod 640)<br>
+        7. Run STARTUP MOUNT on new VM<br>
+        8. Run ALTER DATABASE OPEN<br>
+        9. Validate: SELECT NAME, STATUS FROM V$CONTROLFILE;
+      </div>
+    </div>
+
+    <h3 style="margin-top:30px">Section C: Scenario Questions</h3>
+
+    <div class="question-card">
+      <div class="q-num">Question C-01 · Real World</div>
+      <div class="q-text">Your RMAN script runs at midnight, but the DB shuts down at 5 PM. When you check RMAN logs, you see "ORA-01034: ORACLE not available" every night. What is the proper fix?</div>
+      <div class="q-options">
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">A</span>Reinstall RMAN</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">B</span>Change the deletion policy to NONE so Oracle auto-deletes</div>
+        <div class="q-option" onclick="selectOption(this,'correct')"><span class="option-letter">C</span>Reschedule the backup job to run before the 5 PM shutdown (e.g., 4 PM)</div>
+        <div class="q-option" onclick="selectOption(this,'wrong')"><span class="option-letter">D</span>Keep the database running 24/7</div>
+      </div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">✅ <strong>C is correct.</strong> The backup job must run while the database is available. The fix is to reschedule it to run before the shutdown window — 4 PM would work. In cron: change <code class="inline-code">20 0 * * *</code> to <code class="inline-code">0 16 * * *</code>. This is the root cause from the real incident in this course.</div>
+    </div>
+
+    <div class="question-card">
+      <div class="q-num">Question C-02 · Priority Judgment</div>
+      <div class="q-text">At 3 PM, the FRA hits 90%. Backups haven't run in 5 days. The database shuts down at 5 PM. What is the correct ORDER of actions?</div>
+      <button class="btn-reveal" onclick="toggleAnswer(this)">Show Answer</button>
+      <div class="q-answer">
+        1. <strong>Immediately</strong> run <code class="inline-code">BACKUP ARCHIVELOG ALL DELETE INPUT</code> in RMAN — this frees space right now<br>
+        2. Verify FRA usage decreased and database continues to archive<br>
+        3. Temporarily increase FRA size if still at risk<br>
+        4. After the immediate crisis is resolved, investigate WHY backups stopped<br>
+        5. Fix the backup schedule/script before the 5 PM shutdown<br>
+        6. Confirm backup runs successfully that day (at new time)<br>
+        7. Document the incident and send update to team
+      </div>
+    </div>
+
+    <div class="score-display" id="scoreDisplay">
+      <div class="score-circle" id="scoreCircle">--</div>
+      <p>Complete the assessment to see your score</p>
+    </div>
+  </div>
+
+  <!-- ===== QUICK REFERENCE ===== -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-num">REFERENCE</span>
+      <h2 class="section-title">Quick Reference Card</h2>
+    </div>
+    <div class="section-divider"></div>
+
+    <div class="two-col">
+      <div>
+        <h3>🔴 Top ORA Errors & What They Mean</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Error</th><th>Quick Meaning</th></tr></thead>
+            <tbody>
+              <tr><td><code class="inline-code">ORA-00210</code></td><td>Can't open control file</td></tr>
+              <tr><td><code class="inline-code">ORA-00202</code></td><td>Control file path (shows exact path)</td></tr>
+              <tr><td><code class="inline-code">ORA-00257</code></td><td>Archiver error — FRA full</td></tr>
+              <tr><td><code class="inline-code">ORA-01034</code></td><td>Oracle not available (DB is down)</td></tr>
+              <tr><td><code class="inline-code">ORA-01078</code></td><td>Parameter file processing failed</td></tr>
+              <tr><td><code class="inline-code">ORA-27101</code></td><td>Shared memory doesn't exist (DB not started)</td></tr>
+              <tr><td><code class="inline-code">LRM-00109</code></td><td>Can't open parameter file</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h3>✅ Essential Commands</h3>
+        <div class="code-block">
+          <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Must-Know Commands</span></div>
+          <pre><span class="cm">-- Instance status</span>
+SELECT STATUS FROM V$INSTANCE;
+
+<span class="cm">-- Control files</span>
+SHOW PARAMETER control_files;
+
+<span class="cm">-- FRA usage</span>
+SELECT SPACE_USED/SPACE_LIMIT*100
+FROM V$RECOVERY_FILE_DEST;
+
+<span class="cm">-- Archive log status</span>
+ARCHIVE LOG LIST;
+
+<span class="cm">-- RMAN backup history</span>
+LIST BACKUP SUMMARY;
+
+<span class="cm">-- Emergency backup+delete</span>
+BACKUP ARCHIVELOG ALL
+DELETE INPUT;</pre>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:24px">📍 Alert Log Path Formula</h3>
+    <div class="code-block">
+      <div class="code-header"><div class="code-dots"><div class="dot red"></div><div class="dot yellow"></div><div class="dot green"></div></div><span class="code-label">Path Formula</span></div>
+      <pre>$ORACLE_BASE/diag/rdbms/<span class="var">&lt;db_name&gt;</span>/<span class="var">&lt;SID&gt;</span>/trace/alert_<span class="var">&lt;SID&gt;</span>.log
+
+<span class="cm">Example:</span>
+/u01/app/oracle/diag/rdbms/<span class="var">orcl</span>/<span class="var">ORCL</span>/trace/alert_<span class="var">ORCL</span>.log</pre>
+    </div>
+  </div>
+
+  <!-- NAV -->
+  <div class="page-nav">
+    <a class="btn-nav" href="#module0">← Back to Top</a>
+    <a class="btn-nav" href="#assessment">Go to Assessment →</a>
+  </div>
+
+  </div><!-- end content -->
+</main>
+
+<script>
+// Nav highlighting on scroll
+const sections = document.querySelectorAll('.section[id]');
+const navItems = document.querySelectorAll('.nav-item');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navItems.forEach(item => item.classList.remove('active'));
+      const active = document.querySelector(`.nav-item[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.3 });
+
+sections.forEach(section => observer.observe(section));
+
+// Q&A
+function selectOption(el, type) {
+  const parent = el.closest('.q-options');
+  parent.querySelectorAll('.q-option').forEach(o => o.classList.remove('correct', 'wrong'));
+  el.classList.add(type);
+}
+
+function toggleAnswer(btn) {
+  const card = btn.closest('.question-card');
+  const answer = card.querySelector('.q-answer');
+  answer.classList.toggle('show');
+  btn.textContent = answer.classList.contains('show') ? 'Hide Answer' : 'Show Answer';
+}
+
+// Smooth scroll for nav
+document.querySelectorAll('.nav-item[href]').forEach(item => {
+  item.addEventListener('click', function(e) {
+    e.preventDefault();
+    const target = document.querySelector(this.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>
